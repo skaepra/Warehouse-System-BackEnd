@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Online_Store_Backend.Data;
-using Online_Store_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +14,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<IWeatherForecastServices,WeatherForecastServices>(); //dependency injection
 
 var app = builder.Build();
 
