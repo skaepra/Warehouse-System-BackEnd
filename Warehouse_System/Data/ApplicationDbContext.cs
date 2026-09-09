@@ -1,43 +1,49 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Online_Store_Backend.Table;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore; 
+
+
 
 namespace Online_Store_Backend.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<Product> Products { get; set; }
-        public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<Purchase> Purchases { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<InventoryAudit> InventoryAudits { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(modelBuilder); 
 
-            // 1. ضبط علاقة One-to-Many بين Product و ProductVariant
-            modelBuilder.Entity<Product>()
-                .HasMany(p => p.Variants)
-                .WithOne(v => v.Product)
-                .HasForeignKey(v => v.ProductId)
-                .OnDelete(DeleteBehavior.Cascade); // حذف المتغيرات تلقائياً عند حذف المنتج الأساسي
+            modelBuilder.Entity<Purchase>()
+                .HasOne(p => p.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(p => p.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // 2. تحويل قائمة الصور العامة DefaultImages لـ JSON
-            modelBuilder.Entity<Product>()
-                .Property(p => p.DefaultImages)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? new List<string>()
-                );
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Salesperson)
+                .WithMany()
+                .HasForeignKey(o => o.SalespersonId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // 3. تحويل قائمة صور المتغير Images لـ JSON
-            modelBuilder.Entity<ProductVariant>()
-                .Property(v => v.Images)
-                .HasConversion(
-                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions)null!),
-                    v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions)null!) ?? new List<string>()
-                );
+            modelBuilder.Entity<InventoryAudit>()
+                .HasOne(a => a.Storekeeper)
+                .WithMany()
+                .HasForeignKey(a => a.StorekeeperId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryAudit>()
+                .HasOne(a => a.Manager)
+                .WithMany()
+                .HasForeignKey(a => a.ManagerId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
