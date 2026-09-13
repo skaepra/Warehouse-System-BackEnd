@@ -1,22 +1,30 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Online_Store_Backend.DTOs;
-using Online_Store_Backend.ResponseDto;
+using Online_Store_Backend.DTOs.Auth;
+using Online_Store_Backend.ResponseDto.Auth;
+using Online_Store_Backend.Table;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+using System.Security.Cryptography;
+using Online_Store_Backend.Data;
 
-[Route("api/[controller]")]
+using System.Text;
+using Online_Store_Backend.DTOs;
+
+[Route("api/")]
 [ApiController]
 public class AuthController : ControllerBase
 {
     private readonly UserManager<IdentityUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _context;
 
     public AuthController(
+        ApplicationDbContext context,
         UserManager<IdentityUser> userManager,
         RoleManager<IdentityRole> roleManager,
         IConfiguration configuration)
@@ -24,13 +32,14 @@ public class AuthController : ControllerBase
         _userManager = userManager;
         _roleManager = roleManager;
         _configuration = configuration;
+        _context = context;
     }
 
 
     /// إنشاء حساب 
 
-    [HttpPost("create-employee")]
-    [Authorize(Roles = "Manager")]
+    [HttpPost("createEmployee")]
+
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -42,12 +51,10 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = $"الدور الموظف المحدد '{model.Role}' غير موجود بالنظام." });
         }
 
-        var usernameFromEmail = model.Email.Split('@')[0];
-
         // 2. إنشاء كائن المستخدم
         var user = new IdentityUser
         {
-            UserName = usernameFromEmail,
+            UserName = model.FullName,
             Email = model.Email,
         };
 
@@ -68,36 +75,73 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
+
     /// تسجيل الدخول وإرجاع Token
-    /// </summary>
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginDto model)
     {
-        // 1. البحث عن المستخدم بالبريد
         var user = await _userManager.FindByEmailAsync(model.Email);
         if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
         {
             return Unauthorized(new { message = "البريد الإلكتروني أو كلمة السر غير صحيحة" });
         }
 
-        // 2. توليد Token عند نجاح تسجيل الدخول
+        //  التحقق مما إذا كان الحساب معطلاً/محظوراً
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            return Unauthorized(new { message = "هذا الحساب معطل حالياً، يرجى مراجعة مدير النظام." });
+        }
+
         var token = await GenerateJwtTokenAsync(user);
+        var refreshToken = await GenerateRefreshTokenAsync(user);
 
         return Ok(new
         {
             message = "تم تسجيل الدخول بنجاح",
             token = new JwtSecurityTokenHandler().WriteToken(token),
+            refreshToken = refreshToken.Token,
             expiration = token.ValidTo
         });
     }
 
-    /// <summary>
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest("البيانات الممررة غير صالحة");
+
+        // 1. البحث عن الـ Refresh Token في قاعدة البيانات
+           var storedToken = await _context.RefreshTokens
+  .          Include(t => t.User)
+            .FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
+
+        if (storedToken == null)
+            return BadRequest(new { message = "الـ Refresh Token غير موجود" });
+
+        // 2. التحقق من أن التوكن لم ينته ولم يُلغَ
+        if (storedToken.IsRevoked || DateTime.UtcNow >= storedToken.ExpiryDate)
+            return BadRequest(new { message = "انتهت صلاحية الجلسة، يرجى إعادة تسجيل الدخول" });
+
+        // 3. إنتاج Access Token جديد و Refresh Token جديد
+        var newJwtToken = await GenerateJwtTokenAsync(storedToken.User);
+        var newRefreshToken = await GenerateRefreshTokenAsync(storedToken.User);
+
+        // إلغاء الـ Refresh Token القديم بعد الاستخدام
+        storedToken.IsRevoked = true;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            token = new JwtSecurityTokenHandler().WriteToken(newJwtToken),
+            refreshToken = newRefreshToken.Token,
+            expiration = newJwtToken.ValidTo
+        });
+    }
+
     /// دالة مساعدة لتوليد الـ JWT Token ومطابقته مع بيانات المستخدم وأدواره
-    /// </summary>
     private async Task<JwtSecurityToken> GenerateJwtTokenAsync(IdentityUser user)
     {
         var userRoles = await _userManager.GetRolesAsync(user);
@@ -105,6 +149,7 @@ public class AuthController : ControllerBase
         var authClaims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
             new Claim(ClaimTypes.Email, user.Email!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
@@ -119,9 +164,32 @@ public class AuthController : ControllerBase
         return new JwtSecurityToken(
             issuer: _configuration["JWT:ValidIssuer"],
             audience: _configuration["JWT:ValidAudience"],
-            expires: DateTime.UtcNow.AddMonths(6), // مدة صلاحية التوكن 6 أشهر
+            expires: DateTime.UtcNow.AddMinutes(30), // مدة صلاحية التوكن 30 دقيقة
             claims: authClaims,
             signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
         );
     }
+
+    private async Task<RefreshToken> GenerateRefreshTokenAsync(IdentityUser user)
+    {
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+
+        var refreshToken = new RefreshToken
+        {
+            Token = Convert.ToBase64String(randomNumber),
+            UserId = user.Id,
+            AddedDate = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddDays(30),
+            IsRevoked = false
+        };
+
+        _context.RefreshTokens.Add(refreshToken);
+        await _context.SaveChangesAsync();
+
+        return refreshToken;
+    }
 }
+
+

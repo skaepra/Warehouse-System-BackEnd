@@ -16,6 +16,8 @@ namespace Online_Store_Backend.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<InventoryAudit> InventoryAudits { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -44,6 +46,12 @@ namespace Online_Store_Backend.Data
                 .WithMany()
                 .HasForeignKey(a => a.ManagerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Invoice>()
+               .HasOne(i => i.IssuedBy)
+               .WithMany()
+               .HasForeignKey(i => i.IssuedById)
+               .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

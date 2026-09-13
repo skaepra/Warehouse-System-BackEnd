@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
-using WarehouseAPI.Models;
+using Online_Store_Backend.Models;
 
 namespace Online_Store_Backend.Table
 {

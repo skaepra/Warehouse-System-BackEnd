@@ -9,10 +9,8 @@ namespace Online_Store_Backend.Table
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
-        [MaxLength(150)]
         public string Name { get; set; } = string.Empty;
 
-        [MaxLength(50)]
         public string? SKU { get; set; }
 
         [Required]
@@ -27,5 +25,7 @@ namespace Online_Store_Backend.Table
         public decimal SellingPrice { get; set; }
 
         public int MinQuantityAlert { get; set; } = 10;
+
+        public bool IsActive { get; set; } = true;
     }
 }
