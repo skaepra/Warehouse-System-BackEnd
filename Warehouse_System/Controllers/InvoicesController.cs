@@ -32,7 +32,7 @@ namespace Online_Store_Backend.Controllers
                 {
                     InvoiceId = i.Id,
                     OrderId = i.OrderId,
-                    CustomerName = i.Order != null ? i.Order.CustomerName : string.Empty,
+                    CustomerName = i.Order != null ? i.Order.ShopName : string.Empty,
                     TotalAmount = i.TotalAmount,
                     IssuedAt = i.IssuedAt,
                     IssuedById = i.IssuedById
@@ -61,7 +61,7 @@ namespace Online_Store_Backend.Controllers
             {
                 InvoiceId = invoice.Id,
                 OrderId = invoice.OrderId,
-                CustomerName = invoice.Order?.CustomerName ?? string.Empty,
+                CustomerName = invoice.Order?.ShopName ?? string.Empty,
                 TotalAmount = invoice.TotalAmount,
                 IssuedAt = invoice.IssuedAt,
                 IssuedById = invoice.IssuedById,

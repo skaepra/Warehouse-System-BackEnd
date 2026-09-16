@@ -13,6 +13,7 @@ using Online_Store_Backend.Data;
 
 using System.Text;
 using Online_Store_Backend.DTOs;
+using Online_Store_Backend.DTOs.Online_Store_Backend.DTOs.Auth;
 
 [Route("api/")]
 [ApiController]
@@ -37,9 +38,8 @@ public class AuthController : ControllerBase
 
 
     /// إنشاء حساب 
-
     [HttpPost("createEmployee")]
-
+    [Authorize("Manager")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -105,6 +105,32 @@ public class AuthController : ControllerBase
             refreshToken = refreshToken.Token,
             expiration = token.ValidTo
         });
+    }
+
+    /// تسجيل الخروج وإلغاء الـ Refresh Token
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout([FromBody] LogoutDto model)
+    {
+        if (string.IsNullOrEmpty(model.RefreshToken))
+        {
+            return BadRequest(new { message = "الـ Refresh Token مطلوب" });
+        }
+
+        // 1. البحث عن الـ Refresh Token في قاعدة البيانات
+        var storedToken = await _context.RefreshTokens
+            .FirstOrDefaultAsync(t => t.Token == model.RefreshToken);
+
+        if (storedToken == null)
+        {
+            return BadRequest(new { message = "الـ Refresh Token غير موجود" });
+        }
+
+        // 2. إلغاء التوكن (Revoke)
+        storedToken.IsRevoked = true;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "تم تسجيل الخروج بنجاح" });
     }
 
     [HttpPost("refresh-token")]

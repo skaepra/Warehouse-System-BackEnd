@@ -10,6 +10,9 @@ namespace Online_Store_Backend.DTOs.Product
         [MaxLength(50)]
         public string? SKU { get; set; }
 
+        [Required]
+        public string CategoryId { get; set; } = string.Empty;
+
         [Required, Range(1, int.MaxValue)]
         public int InitialQuantity { get; set; } 
 

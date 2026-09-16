@@ -12,7 +12,7 @@ namespace Online_Store_Backend.Controllers
 {
     [ApiController]
     [Route("api/")]
-    [Authorize] // يتطلب تسجيل الدخول لجميع الدوال
+    [Authorize] 
     public class InventoryAuditController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

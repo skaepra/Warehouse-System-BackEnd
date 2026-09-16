@@ -14,6 +14,14 @@ namespace Online_Store_Backend.Table
         public string? SKU { get; set; }
 
         [Required]
+        public string CategoryId { get; set; } = string.Empty;
+
+        // خاصية التنقل (Navigation Property)
+        [ForeignKey(nameof(CategoryId))]
+        public Category? Category { get; set; }
+
+
+        [Required]
         public int QuantityInStock { get; set; } = 0;
 
         [Required]

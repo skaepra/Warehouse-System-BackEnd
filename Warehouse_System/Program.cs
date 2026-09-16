@@ -75,6 +75,9 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
 app.UseAuthentication(); // 1. التعرف على هوية المستخدم من التوكن
+
+app.UseMiddleware<CheckUserStatusMiddleware>(); // التحقق ان حساب المستخدم فعال
+
 app.UseAuthorization();  // 2. التحقق من الصلاحيات
 
 app.MapControllers();
