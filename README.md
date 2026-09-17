@@ -19,7 +19,7 @@
 
 ## 📋 عن المشروع
 
-Backend لنظام **ENOUGH Warehouse Management System**، مبني باستخدام **ASP.NET Core 8 Web API** ومتصل بقاعدة بيانات **SQL Server**.
+ **SQL Server** ومتصل بقاعدة بيانات **ASP.NET Core 8 Web API** مبني باستخدام **INVENZA Warehouse Management System** Backend نظام
 
 يوفر REST API لإدارة المنتجات، المخزون، الموظفين، الطلبات، الفواتير، التصنيفات، وعمليات جرد المخزون.
 
