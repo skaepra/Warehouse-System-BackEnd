@@ -3,21 +3,24 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Online_Store_Backend.Data;
 using Online_Store_Backend.DTOs.User;
 
 namespace Online_Store_Backend.Controllers
 {
     [ApiController]
     [Route("api/")]
-    //[Authorize(Roles = "Manager")] // حصر جميع العمليات بالمدير فقط
+    [Authorize(Roles = "Manager")] 
     public class UsersController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
-        public UsersController(
-            UserManager<IdentityUser> userManager)
+        public UsersController(UserManager<IdentityUser> userManager, ApplicationDbContext context)
+
         {
             _userManager = userManager;
+            _context = context;
         }
 
 
@@ -71,13 +74,27 @@ namespace Online_Store_Backend.Controllers
             }
             else
             {
-                // حظر الحساب لمنعه من تسجيل الدخول (حظر لـ 100 سنة)
+                // 1. حظر الحساب لمنعه من تسجيل الدخول
                 await _userManager.SetLockoutEnabledAsync(user, true);
                 await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
 
+                // 2. الخاصة بالمستخدم  Refresh Tokens  التعامل مع الـ
+                var userTokens = await _context.RefreshTokens
+                    .Where(t => t.UserId == user.Id)
+                    .ToListAsync();
+
+                if (userTokens.Any())
+                {
+                    // الخيار الأول: الحذف النهائى من قاعدة البيانات
+                    _context.RefreshTokens.RemoveRange(userTokens);
+                    await _context.SaveChangesAsync();
+                }
+
+                // 3. تحديث الـ SecurityStamp لإبطال جيل الـ Access Tokens الحالي فوراً
+                await _userManager.UpdateSecurityStampAsync(user);
             }
 
-            string statusMessage = model.IsActive ? "تم تفعيل الحساب بنجاح." : "تم تعطيل الحساب بنجاح.";
+            string statusMessage = model.IsActive ? "تم تفعيل الحساب بنجاح." : "تم تعطيل الحساب بنجاح والإلغاء الفوري لجلساته.";
             return Ok(new { message = statusMessage });
         }
     }

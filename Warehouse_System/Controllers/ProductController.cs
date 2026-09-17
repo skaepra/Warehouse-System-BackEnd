@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Online_Store_Backend.Data;
 using Online_Store_Backend.DTOs.Product;
 using Online_Store_Backend.ResponseDto.Product;
-using Online_Store_Backend.Table; 
+using Online_Store_Backend.Table;
 
 namespace Online_Store_Backend.Controllers
 {
@@ -22,32 +22,67 @@ namespace Online_Store_Backend.Controllers
             _context = context;
         }
 
+        // 1. جلب قائمة المنتجات مع تضمين التصنيف المرتبط
         [HttpGet("products")]
-        [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<ProductResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetProducts()
         {
-            var products = await _context.Products.ToListAsync();
+            // استخدام Select لتحويل البيانات للشكل المسطح
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    SKU = p.SKU,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category != null ? p.Category.Name : "غير محدد", // استخراج الاسم هنا
+                    QuantityInStock = p.QuantityInStock,
+                    CostPrice = p.CostPrice,
+                    SellingPrice = p.SellingPrice,
+                    MinQuantityAlert = p.MinQuantityAlert,
+                    IsActive = p.IsActive
+                })
+                .AsNoTracking()
+                .ToListAsync();
 
             return Ok(products);
         }
 
-        // 4. جلب تفاصيل منتج معين
+        // 2. جلب تفاصيل منتج معين
         [HttpGet("product/{id}/details")]
-        [ProducesResponseType(typeof(Product), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProductResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetProductById(string id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.Id == id)
+                .Select(p => new ProductResponseDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    SKU = p.SKU,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category != null ? p.Category.Name : "غير محدد",
+                    QuantityInStock = p.QuantityInStock,
+                    CostPrice = p.CostPrice,
+                    SellingPrice = p.SellingPrice,
+                    MinQuantityAlert = p.MinQuantityAlert,
+                    IsActive = p.IsActive
+                })
+                .FirstOrDefaultAsync();
+
             if (product == null)
                 return NotFound();
 
             return Ok(product);
         }
 
-        // 1. إضافة منتج جديد مع مخزونه الأولي
+        // 3. إضافة منتج جديد مع مخزونه الأولي
         [HttpPost("createProduct")]
         [Authorize(Roles = "Manager")]
-        [ProducesResponseType(typeof(Product), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProductResponseDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto dto)
@@ -55,11 +90,28 @@ namespace Online_Store_Backend.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
+            // 1. التحقق من وجود منتج آخر بنفس الاسم
+            var trimmedName = dto.Name.Trim().ToLower();
+            var isNameExists = await _context.Products
+                .AnyAsync(p => p.Name.Trim().ToLower() == trimmedName);
+
+            if (isNameExists)
+            {
+                return BadRequest(new { message = "يوجد منتج آخر مسجل بنفس هذا الاسم بالفعل." });
+            }
+
+            // 2. التحقق من وجود التصنيف
+            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            if (category == null)
+            {
+                return BadRequest("التصنيف المرفق غير موجود في النظام.");
+            }
 
             var product = new Product
             {
-                Name = dto.Name,
+                Name = dto.Name.Trim(),
                 SKU = dto.SKU,
+                CategoryId = dto.CategoryId,
                 QuantityInStock = dto.InitialQuantity,
                 CostPrice = dto.UnitCostPrice,
                 SellingPrice = dto.SellingPrice,
@@ -78,10 +130,25 @@ namespace Online_Store_Backend.Controllers
             await _context.Purchases.AddAsync(purchase);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+            // تحضير الـ DTO للإرجاع
+            var responseDto = new ProductResponseDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                SKU = product.SKU,
+                CategoryId = product.CategoryId,
+                CategoryName = category.Name,
+                QuantityInStock = product.QuantityInStock,
+                CostPrice = product.CostPrice,
+                SellingPrice = product.SellingPrice,
+                MinQuantityAlert = product.MinQuantityAlert,
+                IsActive = product.IsActive
+            };
+
+            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, responseDto);
         }
 
-        // 2. تعديل سعر البيع لمنتج موجود
+        // 4. تعديل سعر البيع لمنتج موجود
         [HttpPatch("updateProduct/{id}/price")]
         [Authorize(Roles = "Manager")]
         [ProducesResponseType(typeof(UpdatePriceResponseDto), StatusCodes.Status200OK)]
@@ -99,7 +166,7 @@ namespace Online_Store_Backend.Controllers
             return Ok(new { Message = "تم تحديث سعر البيع بنجاح.", ProductId = id, NewPrice = product.SellingPrice });
         }
 
-        // 3. إضافة مخزون جديد لمنتج موجود
+        // 5. إضافة مخزون جديد لمنتج موجود
         [HttpPost("product/{id}/add-stock")]
         [Authorize(Roles = "Manager")]
         [ProducesResponseType(typeof(AddStockResponseDto), StatusCodes.Status200OK)]
@@ -115,7 +182,6 @@ namespace Online_Store_Backend.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product == null)
                 return NotFound("المنتج غير موجود.");
-
 
             int totalQuantity = product.QuantityInStock + dto.Quantity;
 
@@ -133,9 +199,7 @@ namespace Online_Store_Backend.Controllers
             await _context.Purchases.AddAsync(purchase);
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = "تمت إضافة المخزون وتحديث متوسط التكلفة بنجاح.", product });
+            return Ok(new { Message = "تمت إضافة المخزون بنجاح.", product });
         }
-
-       
     }
 }

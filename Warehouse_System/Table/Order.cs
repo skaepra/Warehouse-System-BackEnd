@@ -13,7 +13,11 @@ namespace Online_Store_Backend.Table
 
         [Required]
         [MaxLength(150)]
-        public string CustomerName { get; set; } = string.Empty;
+        public string ShopName { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(150)]
+        public string Address { get; set; } = string.Empty;
 
         [Required]
         public string SalespersonId { get; set; }

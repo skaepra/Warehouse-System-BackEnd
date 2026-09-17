@@ -12,7 +12,7 @@ namespace Online_Store_Backend.Controllers
 {
     [ApiController]
     [Route("api/")]
-    [Authorize] // يتطلب تسجيل الدخول لجميع الدوال
+    [Authorize] 
     public class InventoryAuditController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -197,6 +197,34 @@ namespace Online_Store_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "تم رفض طلب الجرد." });
+        }
+         
+        /// حذف الجرد من قيل امين المستودع في حال كان الجرد معلق فقط
+        [HttpDelete("deleteAudit/{id}")]
+        [Authorize(Roles = "Storekeeper")]
+        public async Task<IActionResult> DeleteAudit(string id)
+        {
+            // 1. البحث عن الجرد في قاعدة البيانات
+            var audit = await _context.InventoryAudits.FindAsync(id);
+
+            if (audit == null)
+            {
+                return NotFound(new { message = "سجل الجرد غير موجود." });
+            }
+
+            // 2. التحقق من أن الحالة معلقة
+            bool isPending = audit.Status == 0 ;
+
+            if (!isPending)
+            {
+                return BadRequest(new { message = "لا يمكن حذف هذا الجرد لأنه تم قبوله أو رفضه بالفعل." });
+            }
+
+            // 3. تنفيذ الحذف وحفظ التغييرات
+            _context.InventoryAudits.Remove(audit);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "تم حذف سجل الجرد بنجاح." });
         }
     }
 }

@@ -6,6 +6,6 @@ namespace Online_Store_Backend.DTOs.Order
     public class UpdateOrderStatusDto
     {
         [Required]
-        public OrderStatus Status { get; set; }
+        public string Status { get; set; } = string.Empty;
     }
 }

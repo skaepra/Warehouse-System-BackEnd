@@ -1,9 +1,12 @@
-﻿namespace Online_Store_Backend.ResponseDto.Order
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Online_Store_Backend.ResponseDto.Order
 {
     public class OrderResponseDto
     {
         public string Id { get; set; } = string.Empty;
-        public string CustomerName { get; set; } = string.Empty;
+        public string ShopName { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
         public string SalespersonId { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
