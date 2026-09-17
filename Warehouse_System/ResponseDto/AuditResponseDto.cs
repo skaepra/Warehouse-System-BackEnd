@@ -1,4 +1,4 @@
-﻿namespace Online_Store_Backend.ResponseDto
+﻿namespace Warehouse_System_BackEnd.ResponseDto
 {
     public class AuditResponseDto
     {

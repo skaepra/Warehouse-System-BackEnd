@@ -3,17 +3,17 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Online_Store_Backend.DTOs.Auth;
-using Online_Store_Backend.ResponseDto.Auth;
-using Online_Store_Backend.Table;
+using Warehouse_System_BackEnd.DTOs.Auth;
+using Warehouse_System_BackEnd.ResponseDto.Auth;
+using Warehouse_System_BackEnd.Table;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using Online_Store_Backend.Data;
+using Warehouse_System_BackEnd.Data;
 
 using System.Text;
-using Online_Store_Backend.DTOs;
-using Online_Store_Backend.DTOs.Online_Store_Backend.DTOs.Auth;
+using Warehouse_System_BackEnd.DTOs;
+using Warehouse_System_BackEnd.DTOs.Online_Store_Backend.DTOs.Auth;
 
 [Route("api/")]
 [ApiController]

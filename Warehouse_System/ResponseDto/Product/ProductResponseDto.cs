@@ -1,4 +1,4 @@
-﻿namespace Online_Store_Backend.ResponseDto.Product
+﻿namespace Warehouse_System_BackEnd.ResponseDto.Product
 {
     public class ProductResponseDto
     {

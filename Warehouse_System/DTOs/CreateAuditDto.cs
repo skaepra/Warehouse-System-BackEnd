@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Online_Store_Backend.DTOs
+namespace Warehouse_System_BackEnd.DTOs
 {
     public class CreateAuditDto
     {

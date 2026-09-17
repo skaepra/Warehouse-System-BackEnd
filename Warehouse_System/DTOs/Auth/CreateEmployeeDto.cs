@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Online_Store_Backend.DTOs.Auth
+namespace Warehouse_System_BackEnd.DTOs.Auth
 {
     public class CreateEmployeeDto
     {

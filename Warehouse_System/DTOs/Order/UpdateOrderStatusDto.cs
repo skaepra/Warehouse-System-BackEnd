@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using WarehouseAPI.Models;
 
-namespace Online_Store_Backend.DTOs.Order
+namespace Warehouse_System_BackEnd.DTOs.Order
 {
     public class UpdateOrderStatusDto
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.OpenApi.Models;
 
-namespace Online_Store_Backend.Extensions
+namespace Warehouse_System_BackEnd.Extensions
 {
     public static class SwaggerServiceExtensions
     {

@@ -1,4 +1,4 @@
-﻿namespace Online_Store_Backend.ResponseDto.Invoice
+﻿namespace Warehouse_System_BackEnd.ResponseDto.Invoice
 {
     public class InvoiceSummaryResponseDto
     {

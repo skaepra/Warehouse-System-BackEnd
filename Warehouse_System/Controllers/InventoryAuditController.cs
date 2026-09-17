@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Online_Store_Backend.Data; 
-using Online_Store_Backend.DTOs;
-using Online_Store_Backend.Models;
-using Online_Store_Backend.ResponseDto;
-using Online_Store_Backend.Table;
+using Warehouse_System_BackEnd.Data; 
+using Warehouse_System_BackEnd.DTOs;
+using Warehouse_System_BackEnd.Models;
+using Warehouse_System_BackEnd.ResponseDto;
+using Warehouse_System_BackEnd.Table;
 
-namespace Online_Store_Backend.Controllers
+namespace Warehouse_System_BackEnd.Controllers
 {
     [ApiController]
     [Route("api/")]

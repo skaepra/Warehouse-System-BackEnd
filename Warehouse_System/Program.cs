@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Online_Store_Backend.Data;
-using Online_Store_Backend.Extensions;
+using Warehouse_System_BackEnd.Data;
+using Warehouse_System_BackEnd.Extensions;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);

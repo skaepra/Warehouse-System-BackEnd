@@ -1,4 +1,4 @@
-﻿namespace Online_Store_Backend.Models
+﻿namespace Warehouse_System_BackEnd.Models
 {
     public enum AuditStatus
     {

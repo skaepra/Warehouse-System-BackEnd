@@ -1,4 +1,4 @@
-﻿namespace Online_Store_Backend.DTOs
+﻿namespace Warehouse_System_BackEnd.DTOs
 {
     namespace Online_Store_Backend.DTOs.Auth
     {

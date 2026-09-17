@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Online_Store_Backend.Migrations
+namespace Warehouse_System_BackEnd.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreateWithInvoices : Migration

@@ -1,6 +1,6 @@
-﻿using Online_Store_Backend.Table;
+﻿using Warehouse_System_BackEnd.Table;
 
-namespace Online_Store_Backend
+namespace Warehouse_System_BackEnd
 {
     public class AddStockResponseDto
     {

@@ -1,4 +1,4 @@
-﻿namespace Online_Store_Backend.ResponseDto.Auth
+﻿namespace Warehouse_System_BackEnd.ResponseDto.Auth
 {
     public class AuthResponseDto
     {
