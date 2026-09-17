@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Online_Store_Backend.Table;
+using Warehouse_System_BackEnd.Table;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore; 
 
 
 
-namespace Online_Store_Backend.Data
+namespace Warehouse_System_BackEnd.Data
 {
     public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {

@@ -3,13 +3,13 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Online_Store_Backend.Data; 
-using Online_Store_Backend.DTOs.Order;
-using Online_Store_Backend.ResponseDto.Order;
-using Online_Store_Backend.Table;
+using Warehouse_System_BackEnd.Data; 
+using Warehouse_System_BackEnd.DTOs.Order;
+using Warehouse_System_BackEnd.ResponseDto.Order;
+using Warehouse_System_BackEnd.Table;
 using WarehouseAPI.Models;
 
-namespace Online_Store_Backend.Controllers
+namespace Warehouse_System_BackEnd.Controllers
 {
     [ApiController]
     [Route("api/")]

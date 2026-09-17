@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Online_Store_Backend.Table
+namespace Warehouse_System_BackEnd.Table
 {
     public class Category
     {

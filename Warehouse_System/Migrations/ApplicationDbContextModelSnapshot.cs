@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Online_Store_Backend.Data;
+using Warehouse_System_BackEnd.Data;
 
 #nullable disable
 
-namespace Online_Store_Backend.Migrations
+namespace Warehouse_System_BackEnd.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot

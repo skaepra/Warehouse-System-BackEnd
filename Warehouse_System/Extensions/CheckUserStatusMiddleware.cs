@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
-namespace Online_Store_Backend.Extensions
+namespace Warehouse_System_BackEnd.Extensions
 {
     public class CheckUserStatusMiddleware
     {

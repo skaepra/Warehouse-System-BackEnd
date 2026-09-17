@@ -2,9 +2,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
-using Online_Store_Backend.Models;
+using Warehouse_System_BackEnd.Models;
 
-namespace Online_Store_Backend.Table
+namespace Warehouse_System_BackEnd.Table
 {
     public class InventoryAudit
     {

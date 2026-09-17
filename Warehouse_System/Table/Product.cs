@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace Online_Store_Backend.Table
+namespace Warehouse_System_BackEnd.Table
 {
     public class Product
     {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Online_Store_Backend.DTOs.Order
+namespace Warehouse_System_BackEnd.DTOs.Order
 {
     public class CreateOrderItemDto
     {
