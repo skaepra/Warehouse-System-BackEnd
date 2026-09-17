@@ -90,7 +90,7 @@ dotnet --version
 ### 1. تحميل المشروع
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/skaepra/Warehouse-System-BackEnd.git
 cd <project-folder>
 ```
 
