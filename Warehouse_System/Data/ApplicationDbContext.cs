@@ -59,6 +59,10 @@ namespace Online_Store_Backend.Data
                .WithMany()
                .HasForeignKey(i => i.IssuedById)
                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+               .HasIndex(p => p.Name)
+               .IsUnique();
         }
     }
 }

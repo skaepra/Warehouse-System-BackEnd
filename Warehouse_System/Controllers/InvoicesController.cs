@@ -10,7 +10,7 @@ namespace Online_Store_Backend.Controllers
 {
     [ApiController]
     [Route("api/")]
-    [Authorize]
+    [Authorize(Roles = "Manager")]
     public class InvoicesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

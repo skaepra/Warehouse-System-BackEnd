@@ -90,7 +90,17 @@ namespace Online_Store_Backend.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
+            // 1. التحقق من وجود منتج آخر بنفس الاسم
+            var trimmedName = dto.Name.Trim().ToLower();
+            var isNameExists = await _context.Products
+                .AnyAsync(p => p.Name.Trim().ToLower() == trimmedName);
 
+            if (isNameExists)
+            {
+                return BadRequest(new { message = "يوجد منتج آخر مسجل بنفس هذا الاسم بالفعل." });
+            }
+
+            // 2. التحقق من وجود التصنيف
             var category = await _context.Categories.FindAsync(dto.CategoryId);
             if (category == null)
             {
@@ -99,7 +109,7 @@ namespace Online_Store_Backend.Controllers
 
             var product = new Product
             {
-                Name = dto.Name,
+                Name = dto.Name.Trim(),
                 SKU = dto.SKU,
                 CategoryId = dto.CategoryId,
                 QuantityInStock = dto.InitialQuantity,

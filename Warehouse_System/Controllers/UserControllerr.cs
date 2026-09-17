@@ -10,7 +10,7 @@ namespace Online_Store_Backend.Controllers
 {
     [ApiController]
     [Route("api/")]
-    //[Authorize(Roles = "Manager")] // حصر جميع العمليات بالمدير فقط
+    [Authorize(Roles = "Manager")] 
     public class UsersController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
