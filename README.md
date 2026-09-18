@@ -165,6 +165,7 @@ https://localhost:7156/swagger
 | 🏷️ Categories    | التصنيفات                    |
 | 🛒 Orders         | الطلبات                      |
 | 🧾 Invoices       | الفواتير                     |
+| 🧾 Purchases       | المشتريات                     |
 | 📋 Audits         | جرد المخزون                  |
 
 ---
