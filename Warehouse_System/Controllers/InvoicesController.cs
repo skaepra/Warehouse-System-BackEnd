@@ -11,11 +11,11 @@ namespace Warehouse_System_BackEnd.Controllers
     [ApiController]
     [Route("api/")]
     [Authorize(Roles = "Manager")]
-    public class InvoicesController : ControllerBase
+    public class InvoiceController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public InvoicesController(ApplicationDbContext context)
+        public InvoiceController(ApplicationDbContext context)
         {
             _context = context;
         }

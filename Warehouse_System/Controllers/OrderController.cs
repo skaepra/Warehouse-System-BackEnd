@@ -14,11 +14,11 @@ namespace Warehouse_System_BackEnd.Controllers
     [ApiController]
     [Route("api/")]
     [Authorize]
-    public class OrdersController : ControllerBase
+    public class OrderController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public OrdersController(ApplicationDbContext context)
+        public OrderController(ApplicationDbContext context)
         {
             _context = context;
         }
