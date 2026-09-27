@@ -17,6 +17,12 @@ namespace Warehouse_System_BackEnd.Table
         public Product? Product { get; set; }
 
         [Required]
+        public string? SupplierId { get; set; }
+
+        [ForeignKey(nameof(SupplierId))]
+        public Supplier? Supplier { get; set; }
+
+        [Required]
         public int Quantity { get; set; }
 
         [Required]

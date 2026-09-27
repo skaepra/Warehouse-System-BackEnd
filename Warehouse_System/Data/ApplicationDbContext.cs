@@ -13,12 +13,14 @@ namespace Warehouse_System_BackEnd.Data
 
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<Purchase> Purchases { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<InventoryAudit> InventoryAudits { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Purchase> Purchases { get; set; }
+        public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<ProductSupplier> ProductSuppliers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,6 +65,19 @@ namespace Warehouse_System_BackEnd.Data
             modelBuilder.Entity<Product>()
                .HasIndex(p => p.Name)
                .IsUnique();
+
+            modelBuilder.Entity<ProductSupplier>()
+                .HasKey(ps => new { ps.ProductId, ps.SupplierId });
+
+            modelBuilder.Entity<ProductSupplier>()
+                .HasOne(ps => ps.Product)
+                .WithMany(p => p.ProductSuppliers)
+                .HasForeignKey(ps => ps.ProductId);
+
+            modelBuilder.Entity<ProductSupplier>()
+                .HasOne(ps => ps.Supplier)
+                .WithMany(s => s.ProductSuppliers)
+                .HasForeignKey(ps => ps.SupplierId);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Warehouse_System_BackEnd.Extensions
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
                 // 1. إنشاء الأدوار (Roles) إذا لم تكن موجودة
-                string[] roleNames = { "Manager", "Sales", "Storekeeper" };
+                string[] roleNames = { "Manager", "Sales", "Storekeeper", "SalesRepresentative" };
 
                 foreach (var roleName in roleNames)
                 {

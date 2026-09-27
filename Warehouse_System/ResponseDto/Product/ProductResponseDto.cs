@@ -4,7 +4,7 @@
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public string? SKU { get; set; }
+        public string SKU { get; set; } = string.Empty;
         public string CategoryId { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;
         public int QuantityInStock { get; set; }
