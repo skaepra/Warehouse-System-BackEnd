@@ -12,8 +12,8 @@ using System.Security.Cryptography;
 using Warehouse_System_BackEnd.Data;
 
 using System.Text;
-using Warehouse_System_BackEnd.DTOs;
 using Warehouse_System_BackEnd.DTOs.Online_Store_Backend.DTOs.Auth;
+using Online_Store_Backend.DTOs.Auth;
 
 [Route("api/")]
 [ApiController]

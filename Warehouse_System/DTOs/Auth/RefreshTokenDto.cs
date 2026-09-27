@@ -1,4 +1,4 @@
-﻿namespace Warehouse_System_BackEnd.DTOs
+﻿namespace Online_Store_Backend.DTOs.Auth
 {
     public class RefreshTokenRequestDto
     {

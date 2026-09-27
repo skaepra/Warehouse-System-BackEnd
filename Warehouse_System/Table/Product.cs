@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Warehouse_System_BackEnd.Table
 {
@@ -8,32 +10,30 @@ namespace Warehouse_System_BackEnd.Table
         [Key]
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
-        [Required]
+        [Required, MaxLength(150)]
         public string Name { get; set; } = string.Empty;
 
-        public string? SKU { get; set; }
+        [MaxLength(50)]
+        public string? SKU { get; set; } 
 
         [Required]
         public string CategoryId { get; set; } = string.Empty;
 
-        // خاصية التنقل (Navigation Property)
         [ForeignKey(nameof(CategoryId))]
         public Category? Category { get; set; }
 
+        public int QuantityInStock { get; set; } = 0; 
 
-        [Required]
-        public int QuantityInStock { get; set; } = 0;
-
-        [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal CostPrice { get; set; }
+        public decimal CostPrice { get; set; } = 0;
 
-        [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal SellingPrice { get; set; }
+        public decimal SellingPrice { get; set; } = 0;
 
         public int MinQuantityAlert { get; set; } = 10;
 
         public bool IsActive { get; set; } = true;
+
+        public ICollection<ProductSupplier> ProductSuppliers { get; set; } = new List<ProductSupplier>();
     }
 }

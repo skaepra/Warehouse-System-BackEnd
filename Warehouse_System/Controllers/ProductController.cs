@@ -88,49 +88,57 @@ namespace Warehouse_System_BackEnd.Controllers
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-            // 1. التحقق من وجود منتج آخر بنفس الاسم
-            var trimmedName = dto.Name.Trim().ToLower();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var trimmedName = dto.Name.Trim();
+
+            // 1. التحقق من عدم تكرار الاسم
             var isNameExists = await _context.Products
-                .AnyAsync(p => p.Name.Trim().ToLower() == trimmedName);
+                .AnyAsync(p => p.Name.ToLower() == trimmedName.ToLower());
 
             if (isNameExists)
-            {
                 return BadRequest(new { message = "يوجد منتج آخر مسجل بنفس هذا الاسم بالفعل." });
+
+            // 2. معالجة الـ SKU (توليد تلقائي من 6 محارف إذا كان فارغاً)
+            string finalSku;
+            if (string.IsNullOrWhiteSpace(dto.SKU))
+            {
+                do
+                {
+                    finalSku = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
+                }
+                while (await _context.Products.AnyAsync(p => p.SKU == finalSku));
+            }
+            else
+            {
+                finalSku = dto.SKU.Trim().ToUpper();
+
+                var isSkuExists = await _context.Products.AnyAsync(p => p.SKU == finalSku);
+                if (isSkuExists)
+                    return BadRequest(new { message = "رمز الSKU المستخدم يخص منتج أخر." });
             }
 
-            // 2. التحقق من وجود التصنيف
+            // 3. التحقق من وجود التصنيف
             var category = await _context.Categories.FindAsync(dto.CategoryId);
             if (category == null)
-            {
                 return BadRequest("التصنيف المرفق غير موجود في النظام.");
-            }
 
+            // 4. إنشاء كيان المنتج الأسعار والمخزون تبدأ
             var product = new Product
             {
-                Name = dto.Name.Trim(),
-                SKU = dto.SKU,
+                Name = trimmedName,
+                SKU = finalSku,
                 CategoryId = dto.CategoryId,
-                QuantityInStock = dto.InitialQuantity,
-                CostPrice = dto.UnitCostPrice,
-                SellingPrice = dto.SellingPrice,
-                MinQuantityAlert = dto.MinQuantityAlert
-            };
-
-            var purchase = new Purchase
-            {
-                ProductId = product.Id,
-                Quantity = dto.InitialQuantity,
-                UnitCostPrice = dto.UnitCostPrice,
-                CreatedByUserId = userId
+                MinQuantityAlert = dto.MinQuantityAlert,
+                QuantityInStock = 0,
+                CostPrice = 0,
+                SellingPrice = 0
             };
 
             await _context.Products.AddAsync(product);
-            await _context.Purchases.AddAsync(purchase);
             await _context.SaveChangesAsync();
 
-            // تحضير الـ DTO للإرجاع
+            // 5. تحضير الـ DTO للإرجاع
             var responseDto = new ProductResponseDto
             {
                 Id = product.Id,
@@ -147,6 +155,7 @@ namespace Warehouse_System_BackEnd.Controllers
 
             return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, responseDto);
         }
+
 
         // 4. تعديل سعر البيع لمنتج موجود
         [HttpPatch("updateProduct/{id}/price")]
@@ -168,7 +177,7 @@ namespace Warehouse_System_BackEnd.Controllers
 
         // 5. إضافة مخزون جديد لمنتج موجود
         [HttpPost("product/{id}/add-stock")]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager, SalesRepresentative")]
         [ProducesResponseType(typeof(AddStockResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -176,30 +185,68 @@ namespace Warehouse_System_BackEnd.Controllers
         public async Task<IActionResult> AddStock(string id, [FromBody] AddStockDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            // 1. التحقق من المدخلات الرقمية
+            if (dto.Quantity <= 0)
+                return BadRequest("الكمية المضافة يجب أن تكون أكبر من الصفر.");
+
+            if (dto.UnitCostPrice <= 0)
+                return BadRequest("سعر الشراء يجب أن يكون أكبر من الصفر.");
 
             var product = await _context.Products.FindAsync(id);
-            if (product == null)
-                return NotFound("المنتج غير موجود.");
+            if (product == null) return NotFound("المنتج غير موجود.");
 
-            int totalQuantity = product.QuantityInStock + dto.Quantity;
+            var supplierExists = await _context.Suppliers.AnyAsync(s => s.Id == dto.SupplierId);
+            if (!supplierExists) return BadRequest("المورد المحدد غير موجود.");
 
-            product.CostPrice = dto.UnitCostPrice;
-            product.QuantityInStock = totalQuantity;
+            // 2. التحقق إن كان المورد مسجلاً سابقاً للمنتج
+            var isSupplierLinked = await _context.ProductSuppliers
+                .AnyAsync(ps => ps.ProductId == id && ps.SupplierId == dto.SupplierId);
 
-            var purchase = new Purchase
+            if (!isSupplierLinked) return BadRequest("المورد الذي تم اختياره غير مرتبط بهذا المنتج.");
+
+            // 3. بدء المعاملة (Transaction) لضمان اتساق البيانات بين الجدولين
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                ProductId = product.Id,
-                Quantity = dto.Quantity,
-                UnitCostPrice = dto.UnitCostPrice,
-                CreatedByUserId = userId
-            };
+                product.QuantityInStock += dto.Quantity;
+                product.CostPrice = dto.UnitCostPrice;
 
-            await _context.Purchases.AddAsync(purchase);
-            await _context.SaveChangesAsync();
+                // حساب سعر البيع تلقائياً بزادة 20
+                product.SellingPrice = dto.UnitCostPrice * 1.20m;
 
-            return Ok(new { Message = "تمت إضافة المخزون بنجاح.", product });
+                // 5. إنشاء سجل حركة الشراء 
+                var purchase = new Purchase
+                {
+                    ProductId = product.Id,
+                    SupplierId = dto.SupplierId,
+                    Quantity = dto.Quantity,
+                    UnitCostPrice = dto.UnitCostPrice,
+                    PurchaseDate = DateTime.UtcNow,
+                    CreatedByUserId = userId
+                };
+
+                await _context.Purchases.AddAsync(purchase);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                // 6. إرجاع الاستجابة ببيانات المنتج التابعة
+                return Ok(new
+                {
+                    Message = "تمت إضافة المخزون وتحديث الأسعار بنجاح.",
+                    product.QuantityInStock,
+                    product.CostPrice,
+                    product.SellingPrice
+                });
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, "حدث خطأ أثناء إضافة المخزون.");
+            }
         }
     }
 }
